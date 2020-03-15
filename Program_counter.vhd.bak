@@ -1,0 +1,53 @@
+-- Program counter in fetch stage. The output of it is connected to Inst_Mem and adder
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity Program_Counter is
+
+port
+
+      (
+clk : in std_logic;
+
+en : in std_logic_vector(1 downto 0) :=(others=>'0');
+
+PC_in : in std_logic_vector(31 downto 0) :=(others=>'0');
+
+PC_out : out std_logic_vector(31 downto 0) :=(others=>'0');
+
+        PC4 : out std_logic_vector(31 downto 0) :=(others=>'0')
+
+        );
+
+end Program_Counter;
+
+
+
+architecture Behavioral of Program_Counter is
+
+begin
+
+process(clk)
+
+begin
+
+if (rising_edge(clk)) then
+
+	PC_out<= PC_in;
+
+	case en is
+		when "01" => PC4 <=std_logic_vector( unsigned(PC_in) + X"4");
+		when "10" => PC4 <=std_logic_vector( unsigned(PC_in) + X"4");
+		when others => PC4 <=std_logic_vector( unsigned(PC_in) + X"4")
+	end case;
+
+end if;
+
+end process;
+
+end Behavioral;

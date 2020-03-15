@@ -1,0 +1,101 @@
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity Reg_File is
+
+generic
+
+  (
+
+datasize: integer:=31;
+
+    no_reg: integer:=31;
+
+addr : integer:=4
+
+  );
+
+port (
+
+clk, En_W: in std_logic :='0'; 
+
+    Reg1: in std_logic_vector(addr downto 0):=(others=>'0');
+
+    Reg2: in std_logic_vector(addr downto 0):=(others=>'0');
+
+    Reg_W: in std_logic_vector(addr downto 0):=(others=>'0');
+
+    Data_W: in std_logic_vector(datasize downto 0):=(others=>'0');
+
+    Data1: out std_logic_vector(datasize downto 0):=(others=>'0');
+
+    Data2: out std_logic_vector(datasize downto 0):=(others=>'0')
+
+);
+
+end Reg_File;
+
+
+
+architecture Behavioral of Reg_File is
+
+type Reg is array (0 to no_reg) of std_logic_vector (datasize downto 0);
+
+signal Reg_data: Reg := (others=>(others=>'0'));
+
+begin
+
+process(clk)
+
+begin
+
+        Reg_data (1) <= "00000000000000000000000000000001";
+
+        Reg_data (2) <= "00000000000000000000000000000010";
+
+        Reg_data (4) <= "00000000000000000000000000000100";
+
+        Reg_data (5) <= "00000000000000000000000000000101";
+
+        Reg_data (7) <= "00000000000000000000000000000111";
+
+        Reg_data (8) <= "00000000000000000000000000001000";
+
+        Reg_data (10) <= "00000000000000000000000000001010";
+
+        Reg_data (11) <= "00000000000000000000000000001011";
+
+        Reg_data (13) <= "00000000000000000000000000001101";
+
+        Reg_data (15) <= "00000000000000000000000000001111";
+
+        Reg_data (18) <= "00000000000000000000000000010010";
+	Reg_data (16) <= "00000000000000000000000000010000";
+	Reg_data (17) <= "00000000000000000000000000010001";
+
+
+if(rising_edge(clk)) then
+
+Data1 <= Reg_data(to_integer(unsigned(Reg1)));
+
+        Data2 <= Reg_data(to_integer(unsigned(Reg2)));
+
+
+
+if(En_W ='1') then
+
+Reg_data(to_integer(unsigned(Reg_W))) <= Data_W;
+
+end if;
+
+end if;
+
+end process;
+
+end Behavioral ;
+

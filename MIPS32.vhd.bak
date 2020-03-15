@@ -1,0 +1,360 @@
+-- MIPS 32 design
+
+-- MAIN file
+
+-- MIPS 32 design
+
+-- MAIN file
+
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+-- MIPS takes only clock as an input
+
+entity MIPS32 is
+
+port(
+
+clk: in std_logic:='0'
+
+  );
+
+end MIPS32;
+
+architecture Behavioral of MIPS32 is
+
+component IF_Stage is
+port
+
+  (
+
+clk: in std_logic:='0';
+
+    en1: in std_logic_vector(1 downto 0) :=(others =>'0');
+
+en2: in std_logic :='1';
+
+    PC_D: in std_logic_vector(1 downto 0) :=(others =>'0');
+
+    PC_BD: in std_logic_vector(31 downto 0) :=(others =>'0');
+
+
+
+    inst_out, PC4: out std_logic_vector(31 downto 0):=(others =>'0')
+    
+    I1: in std_logic_vector(31 downto 0) :=(others =>'0')
+--jmp :in std_logic:='0'
+
+    );
+
+end component;
+
+
+
+
+
+component ID_Stage is
+
+port
+
+(
+
+clk :in std_logic :='0';
+
+flush :in std_logic :='1';
+
+  Mux_Signal1, Mux_Signal2: in std_logic:='X'; -- muxes to select RD1 and RD2
+
+  WB_reg  : in std_logic :='X'; -- from the hazard unit
+
+  WB_out  : in std_logic_vector(4 downto 0) := (others=>'0');
+
+  Inst_Decode, Data_W , PC4, Output_ALU: in std_logic_vector(31 downto 0) := (others=>'0');
+
+
+
+  -- control signals
+
+  Ex_RegW, Ex_MReg, Ex_MemW, ALU_S_en, RegDst_en: out std_logic :='0';
+  PCSrcD :out std_logic_vector(1 downto 0) := (others=>'0');
+  Bra_Det :out std_logic_vector(1 downto 0) := (others=>'0');
+
+
+  --ALU control bits
+
+  ALUctl_en: out std_logic_vector(2 downto 0) := (others=>'X');
+
+
+
+  Ex_Rs, Ex_Rt, Ex_Rd, RsD, RtD : out std_logic_vector(4 downto 0) := (others=>'0');
+
+  IE_out1, IE_out2,Ex_Sign: out std_logic_vector(31 downto 0) := (others=>'0');
+
+  AdderOut: out  std_logic_vector(31 downto 0) := (others=>'0')
+
+);
+
+end component;
+
+
+
+
+
+component EX_Stage is
+
+port(
+
+
+
+clk: in std_logic:='0';
+
+  Ex_RegW, Ex_MReg, Ex_MemW, ALU_S_en, RegDst_en : in std_logic:='0';
+
+  ALUctl_en: in std_logic_vector(2 downto 0) := (others=>'X');
+
+  MUX3_en1,MUX3_en2: in std_logic_vector(1 downto 0) :=  (others =>'0');
+
+  MUX3_Rin1, MUX3_Rin2, MUX2_SignIm, ALUout_mem,ResW: in std_logic_vector(31 downto 0) :=  (others =>'0');
+
+  Ex_Rs, Ex_Rt, RdE  : in std_logic_vector(4 downto 0) :=  (others =>'0');
+
+
+
+  Mem_Reg_W, Mem_Reg_M, Mem_Write_M: out std_logic:='X';
+
+ALUout_mem2 : out std_logic_vector(31 downto 0):=(others=>'0');
+
+  Write_DM: out std_logic_vector(31 downto 0):=(others=>'0');
+
+  Output_WBE, Output_WBM: out std_logic_vector(4 downto 0):=(others=>'0')
+
+
+
+);
+
+end component;
+
+
+
+
+
+component Mem_Stage is
+
+port(
+
+clk: in std_logic :='0';
+
+     Mem_Reg_W, Mem_Reg_M, Mem_Write_M: in std_logic:='X';
+
+     ALUout_mem, Mem_Data_W  : in std_logic_vector(31 downto 0);
+
+WBA_in : in std_logic_vector(4 downto 0) := (others=>'0');
+
+     Write_Reg_W , Mem_Reg : out std_logic :='X';
+
+     DWB_out1, DWB_out2: out std_logic_vector(31 downto 0):= (others=>'0');
+
+     Output_WB   : out std_logic_vector(4 downto 0) := (others=>'0')
+
+  );
+
+end component;
+
+
+
+
+
+
+
+
+
+component WB_MUX is
+
+port(
+
+    Mem_Reg : in std_logic:='X';
+
+    Output_ALUW, Read_DataW: in std_logic_vector(31 downto 0):=(others=>'0');
+
+    Output_W: out std_logic_vector(31 downto 0):=(others=>'0')
+
+  );
+
+end component;
+
+
+
+component Hazard_Unit is
+
+port(
+
+clk: in std_logic;
+
+    --address from various stages
+
+    Write_Reg_W, Write_RegM, Write_RegE: in std_logic_vector( 4 downto 0):= (others=>'0');
+
+    RsD, RtD, Ex_Rs, Ex_Rt, RdE: in std_logic_vector( 4 downto 0):= (others=>'0');
+
+    --select lines for muxes in EX stage
+
+    mux3_en_1,MUX3_EN_2: out std_logic_vector( 1 downto 0):= (others=>'0');
+
+    --select lines for muxes in ID stage
+
+    AD, BD: out std_logic:='0';
+
+
+
+    --in presence LOAD instruction
+
+    Mem_Reg_W, Reg_WriteW, Reg_WriteE, Mem_Reg_M, Ex_MReg : in std_logic:='0';
+
+
+
+    --stall control signals
+
+    ID_Stall: out std_logic:='1';
+
+    IF_Stall : out std_logic:='1';
+
+
+
+flush: out std_logic;
+
+  Bra_Det :in std_logic_vector(1 downto 0) := (others=>'0')
+
+
+    );
+
+
+
+end component;
+
+
+
+
+
+--signal declarations in whole design
+
+
+
+--singals in ID stage
+
+signal instruction_out, PC4, PCBra_Det: std_logic_vector(31 downto 0);
+
+
+
+--control signals in Execute  stage
+
+signal Ex_RegW, Ex_MReg, Ex_MemW, ALU_S_en, RegDst_en: std_logic;
+signal PCsrcD, Bra_Det: std_logic_vector(1 downto 0);
+
+signal ALUctl_en: std_logic_vector(2 downto 0);
+
+
+
+--register select signals in ID and EX stage
+
+signal Write_Reg_W, Ex_Rs, Ex_Rt, Ex_Rd, RsD, RtD : std_logic_vector(4 downto 0);
+
+signal IE_out1, IE_out2, Ex_Sign, AdderOut: std_logic_vector(31 downto 0);
+
+
+
+-- control signals in Memory access  stage
+
+signal Mem_Reg_W, Mem_Reg_M, Mem_Write_M: std_logic;
+
+
+
+-- data signals from ALu and write data in Mem access stage
+
+signal ALUout_mem, Mem_Data_W  : std_logic_vector(31 downto 0);
+
+signal Output_WBE, Output_WBM: std_logic_vector(4 downto 0);
+
+
+
+-- control signals in write back stage
+
+signal Write_Reg , Mem_Reg : std_logic;
+
+signal DWB_out1, DWB_out2: std_logic_vector(31 downto 0);
+
+signal WBAoW: std_logic_vector(4 downto 0);
+
+
+
+--final result to be fed back into Reg file
+
+signal Output_W : std_logic_vector(31 downto 0);
+
+
+
+--signals from hazard unit
+
+signal FwdAD, FwdBD, ID_Stall, IF_Stall, flush: std_logic;
+
+signal MUX3_en1, MUX3_en2: std_logic_vector(1 downto 0);
+
+
+
+begin
+
+
+
+stage1  : IF_Stage  port map ( clk, PCsrcD, ID_Stall, PCsrcD, Ex_Sign,
+
+                                                                                                instruction_out, PC4,IE_out1);
+
+
+
+stage2  : ID_Stage  port map ( clk, flush, FwdAD, FwdBD, Write_Reg , WBAoW,
+
+                                                                                                instruction_out, Output_W, PC4, ALUout_mem,
+
+                                                                                                Ex_RegW, Ex_MReg, Ex_MemW, ALU_S_en,RegDst_en, PCsrcD, Bra_Det, ALUctl_en, Ex_Rs, Ex_Rt,Ex_Rd, RsD, RtD, IE_out1, IE_out2, Ex_Sign, AdderOut );
+
+
+
+stage3  : EX_Stage  port map ( clk, Ex_RegW, Ex_MReg, Ex_MemW, ALU_S_en,
+
+                                                                                                RegDst_en, ALUctl_en, MUX3_en1, MUX3_en2, IE_out1, IE_out2,
+
+                                                                                                Ex_Sign, ALUout_mem, Output_W, Ex_Rs, Ex_Rt, Ex_Rd, Mem_Reg_W,
+
+                                                                                                Mem_Reg_M, Mem_Write_M, ALUout_mem, Mem_Data_W , Output_WBE,
+
+                                                                                                Output_WBM);
+
+
+
+stage4  : Mem_Stage port map ( clk, Mem_Reg_W, Mem_Reg_M, Mem_Write_M, ALUout_mem,
+
+                                                                                                Mem_Data_W , Output_WBM, Write_Reg , Mem_Reg , DWB_out1,
+
+                                                                                                DWB_out2, WBAoW );
+
+
+
+stage5  : WB_MUX  port map ( Mem_Reg , DWB_out2, DWB_out1, Output_W);
+
+
+
+stage6  : Hazard_Unit port map( clk, WBAoW, Output_WBM, Output_WBE, RsD,
+
+                                                                                                RtD, Ex_Rs, Ex_Rt, Ex_Rd, MUX3_en1, MUX3_en2, FwdAD, FwdBD, Mem_Reg_W,
+
+                                                                                                Write_Reg , Ex_RegW, Mem_Reg_M, Ex_MReg,
+
+                                                                                                ID_Stall, IF_Stall, flush, Bra_Det);
+
+
+
+end Behavioral;

@@ -1,0 +1,44 @@
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+
+
+entity ThreeIn_MUX is
+
+port(
+
+MUX3_en: in std_logic_vector(1 downto 0) := (others=>'0');
+
+ MUX3_in1: in std_logic_vector(31 downto 0) := (others=>'0');
+
+ MUX3_in2: in std_logic_vector(31 downto 0) := (others=>'0');
+
+MUX3_in3: in std_logic_vector(31 downto 0) := (others=>'0');
+
+MUX3_out: out std_logic_vector(31 downto 0) := (others=>'0')
+
+);
+
+end ThreeIn_MUX;
+
+
+
+architecture Behavioral of ThreeIn_MUX is
+
+begin
+
+  MUX3_out <= MUX3_in1 when Mux3_en = "00" else
+
+MUX3_in2 when MUX3_en= "01" else
+
+MUX3_in3 when MUX3_en = "10" else
+
+     (others=>'0');
+
+end Behavioral;
+

@@ -1,0 +1,38 @@
+-- 2 input mux in Wb stage to select Read Data / ALU output
+
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity WB_MUX is
+
+port(
+
+    Mem_Reg: in std_logic:='0';
+
+    Output_ALUW, Read_DataW: in std_logic_vector(31 downto 0):=(others=>'0');
+
+    Output_W: out std_logic_vector(31 downto 0):=(others=>'0')
+
+  );
+
+end WB_MUX;
+
+
+
+architecture Behavioral of WB_MUX is
+
+begin
+
+  Output_W <= Output_ALUW  when  Mem_Reg='0' else
+
+             Read_DataW when Mem_Reg='1' else
+
+             (others=>'0');
+
+end Behavioral;
+

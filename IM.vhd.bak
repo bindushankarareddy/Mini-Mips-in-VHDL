@@ -1,0 +1,88 @@
+-- Instruction memory its output is connected to IF/ID
+
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity IM is
+
+generic
+
+(
+
+ inst_size        : integer:= 2047;
+
+  data_size  : integer:= 31;
+
+ ins_memadd: integer:= 31;
+
+  inst_out       : integer:= 31
+
+  );
+
+port
+
+    (
+
+        PC : in std_logic_vector(ins_memadd  downto 0);
+
+        IM_out : out std_logic_vector(inst_out downto 0)
+
+        );
+
+end IM;
+
+
+
+architecture Behavioral of IM is
+
+type inst_block is array (0 to inst_size) of std_logic_vector (data_size downto 0);
+
+signal s1: inst_block;
+
+begin
+
+  --**************************************
+
+  --First instruction
+
+  -- we have three registers R1, R2 and R3 and we make summation in this stage
+
+s1(0) <= "00000001000100001100000000100000"; --ADD  R1,R2,R3    -  r3  = r1+r2
+s1(4) <= "00000101000110011000000000100010"; --SUB  R5,R3,R6    -  r6  = r5-r3 
+  --**************************************
+
+  --Third instructions
+s1(8) <= "00000111010000100100000000100100"; --AND  R7,R8,R9    -  r9  = r7 and r8
+--****************************************  s1 (32) <= X"02";
+--Fourth Instruction
+s1(12)<= "00001010010110110000000000100101"; --XOR  R10,R11,R12 -  r12 = r10 or r11
+--Fifth instruction
+s1(16)<= "00101100011100000000000000000101"; --ANDI R12,R14,#5  -  R14 = Cont(R12) and 5
+
+--6th instruction
+s1(20)<= "01001101011110000000000000000110"; --SUBI R13,R15,#6  -  R15 = Cont(R13) - 6
+--7th instruction
+s1(24)<= "10110000000100000000000000000010"; --SW   R16,R2,#2   -  Mem(contents(R16)+2) <- R2
+--S1(24)<= "01101101011100000000000000000000"; --Bra  R12,R14,0   -  if cont(R12)=cont(R14) PC to #0
+--8th instruction
+s1(28)<= "00000001000100001100000000100000"; --ADD  R1,R2,R3    -  r3  = r1+r2
+
+s1(32)<= "10010001100110000000000000000001"; --LW   R17,R19, #1 -  R19 <- Mem(Contents(R17)+1)
+--10th instrruction
+s1(36)<= "00000101000010011000000000100010"; --SUB  R5,R1,R6    -  r6  = r5-r1 
+--s1(36)<= "00010011000010001100000000100000"; --ADD  R19,R1,R3   -  R3  = R19+R1
+--s1(32)<= "00000001000100001100000000100000"; --ADD  R1,R2,R3    -  r3  = r1+r2
+--s1(20)<= "00000000001000100001100000100000";
+--s1(28)<= "11111100000000000000000000000000";
+--s1(32)<= "00000000100000000000000000100000";
+
+
+
+IM_out <=s1(to_integer(unsigned(PC))); 
+end Behavioral;
+

@@ -1,0 +1,95 @@
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity Memory is
+
+port(
+
+clk: in std_logic :='0';
+
+     Mem_Reg_W: in std_logic:='0';
+
+     Mem_Reg_M: in std_logic:='0';
+
+     Mem_Write_M: in std_logic:='0';
+
+     ALUout_mem: in std_logic_vector(31 downto 0);
+
+     Mem_Data_W : in std_logic_vector(31 downto 0);
+
+WBA_in : in std_logic_vector(4 downto 0) := (others=>'0');
+
+     Write_Reg_W: out std_logic :='0';
+
+     Mem_Reg: out std_logic :='0';
+
+     DWB_out1: out std_logic_vector(31 downto 0):= (others=>'0');
+
+     DWB_out2: out std_logic_vector(31 downto 0):= (others=>'0');
+
+     Output_WB : out std_logic_vector(4 downto 0) := (others=>'0')
+
+  );
+
+end Memory;
+
+
+
+architecture Behavioral of Memory is
+
+-- mem access stage has data memory and mem/WB buffer
+
+component DataMem is
+
+port(
+
+clk, Write_Data: in std_logic:='0';
+
+    DM_Addr_in, DM_Data_in: in std_logic_vector(31 downto 0);
+
+    DM_out: out std_logic_vector(31 downto 0)
+
+  );
+
+end component;
+
+
+
+component M_WB_Buffer is
+
+port(
+
+clk: in std_logic;
+
+    Mem_Reg_W, Mem_Reg_M: in std_logic:='0';
+
+    DWB_in1, DWB_in2: in std_logic_vector(31 downto 0):= (others=>'0');
+
+WBA_in : in std_logic_vector(4 downto 0) := (others=>'0');
+
+    Write_Reg_W, Mem_Reg: out std_logic :='0';
+
+    DWB_out1, DWB_out2: out std_logic_vector(31 downto 0):= (others=>'0');
+
+    Output_WB : out std_logic_vector(4 downto 0) := (others=>'0')
+
+  );
+
+end component;
+
+signal mem2buf : std_logic_vector(31 downto 0);
+
+begin
+
+m   :  DataMem     port map(clk,Mem_Write_M, ALUout_mem, Mem_Data_W, mem2buf );
+
+buf :  M_WB_Buffer port map(clk,Mem_Reg_W, Mem_Reg_M, mem2buf,ALUout_mem, WBA_in, Write_Reg_W, Mem_Reg, DWB_out1, DWB_out2, Output_WB );
+
+
+
+end Behavioral;

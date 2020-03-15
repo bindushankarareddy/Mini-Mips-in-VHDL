@@ -1,0 +1,34 @@
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity Sign_Extend is
+
+port(
+
+    in_SE: in std_logic_vector(18 downto 0) ;
+
+    Sign_Extend_out: out std_logic_vector(31 downto 0)
+
+  );
+
+
+
+end Sign_Extend;
+
+
+
+architecture Behavioral of Sign_Extend is
+
+begin
+
+  Sign_Extend_out <= "1111111111111" & in_SE when in_SE (18) ='1' else
+
+  "0000000000000" & in_SE;
+
+end Behavioral;
+

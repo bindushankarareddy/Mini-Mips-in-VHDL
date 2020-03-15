@@ -1,0 +1,147 @@
+-- control unit decode
+library ieee;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+ 
+
+entity Control_Unit is
+
+  port(
+
+clk: in std_logic;
+        Opcode: in std_logic_vector(2 downto 0);
+	Fnctn: in std_logic_vector(5 downto 0);
+      	Reg_Write: out std_logic:='0';
+	MR_Mux_Sel: out std_logic:='0'; 
+	Mem_Write: out std_logic:='0'; 
+	ALU_Mux_Sel: out std_logic:='0'; 	
+	Reg_Mux_Sel: out std_logic:='0';
+	Bra_Det: out std_logic:='0';
+        ALU_Control: out std_logic_vector(2 downto 0):=(others=>'0')
+    );
+
+end Control_Unit;
+
+ 
+
+architecture Behavioral of Control_Unit is
+
+  signal ALUop: std_logic_vector (1 downto 0);
+
+  signal op : std_logic_vector (2 downto 0);
+
+ 
+
+  begin
+
+    op<=Opcode;
+
+    process(clk)
+
+      begin
+
+        if(rising_edge(clk)) then
+
+        case op is
+
+ 
+        when "000" =>          --R Type instruction in MIPS
+
+          ALUop    <=  "10";
+          ALU_Mux_Sel  <=  '0';
+          Reg_Mux_Sel  <=  '1';
+          Reg_Write <=  '1';
+          MR_Mux_Sel <=  '0';
+          Mem_Write<=  '0';
+          Bra_Det     <=  '0';
+
+         
+
+        when "001" => --I type instruction in MIPS, we have ANDI
+
+	  ALUop    <=  "11";
+          ALU_Control   <=  "000";
+          ALU_Mux_Sel  <=  '1';
+          Reg_Mux_Sel <=  '0';
+          Reg_Write <=  '1';
+          MR_Mux_Sel <=  '0';
+          Mem_Write<=  '0';
+          Bra_Det     <=  '0';
+   
+
+        when "010" =>--I type instruction in MIPS, we have SUBI
+	  
+          ALU_Control   <=  "110";
+          ALU_Mux_Sel <=  '1';
+          Reg_Mux_Sel  <=  '0';
+          Reg_Write <=  '1';
+          MR_Mux_Sel<=  '0';
+          Mem_Write<=  '0';
+          Bra_Det     <=  '0';
+
+
+        when "011" =>--branching
+
+          ALUop    <=  "01";
+          ALU_Mux_Sel  <=  '0';
+          Reg_Mux_Sel  <=  'X';
+          Reg_Write <=  '0';
+          MR_Mux_Sel <=  'X';
+          Mem_Write<=  '0';
+          Bra_Det     <=  '1';
+ 
+
+        when "100" => --loading an instruction in MIPS
+
+          ALU_Control   <=  "010";
+          ALU_Mux_Sel  <=  '1';
+          Reg_Mux_Sel  <=  '0';
+          Reg_Write <=  '1';
+          MR_Mux_Sel<=  '1';
+          Mem_Write<=  '0';
+          Bra_Det     <=  '0';
+   
+
+        when "101" =>--storing an instruction in MIPS
+
+          ALU_Control    <=  "010";
+          ALU_Mux_Sel  <=  '1';
+          Reg_Mux_Sel  <=  'X';
+          Reg_Write <=  '0';
+          MR_Mux_Sel<=  'X';
+          Mem_Write<=  '1';
+          Bra_Det    <=  '0';
+
+ when "111" =>-- JMP an instruction in MIPS
+
+          ALU_Control    <=  "XXX";
+          ALU_Mux_Sel  <=  'X';
+          Reg_Mux_Sel  <=  'X';
+          Reg_Write <=  '0';
+          MR_Mux_Sel<=  'X';
+          Mem_Write<=  'X';
+          Bra_Det    <=  '0';
+	
+--	  jmp <= '0'; 
+	  
+         -- PC_4 <= "00000000000000000000000000000000";
+ 	when others =>
+        end case;
+       
+        --ALU Decode
+
+           if op="001" then ALU_Control <="000"; -- and - For ANDI
+	elsif op="010" then ALU_Control <="110"; -- sub - For SUBI
+        elsif op="011" then ALU_Control <="110"; -- sub for branch
+        elsif op="000" and fnctn <="100000" then  ALU_Control <="010"; -- addition
+        elsif op="000" and fnctn <="100010" then  ALU_Control <="110"; -- subtraction
+        elsif op="000" and fnctn <="100100" then  ALU_Control <="000"; -- and
+        elsif op="000" and fnctn <="100101" then  ALU_Control <="001"; -- or
+
+        end if;
+      end if;
+    end process;
+
+  end Behavioral;
+

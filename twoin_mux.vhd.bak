@@ -1,0 +1,42 @@
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity TwoIn_MUX is
+
+port(
+
+MUX2_en: in std_logic:= '0';
+
+MUX2_in1: in std_logic_vector(31 downto 0) := (others=>'0');
+
+MUX2_in2: in std_logic_vector(31 downto 0) := (others=>'0');
+
+  MUX2_out: out std_logic_vector(31 downto 0) := (others=>'0')
+
+);
+
+end TwoIn_MUX;
+
+
+
+architecture Behavioral of TwoIn_MUX is
+
+begin
+
+  MUX2_out <= MUX2_in1 when MUX2_en = '0' else
+
+MUX2_in2 when MUX2_en= '1' else
+
+       (others=>'0');
+
+end Behavioral;
+
+
+
+
+

@@ -1,0 +1,76 @@
+library ieee;
+
+use IEEE.std_logic_1164.all;
+
+use IEEE.numeric_std.all;
+
+
+
+entity M_WB_Buffer is
+
+generic (
+
+width: integer:=31
+
+  );
+
+port(
+
+clk: in std_logic;
+
+    Mem_Reg_W: in std_logic:='0';
+
+    Mem_Reg_M: in std_logic:='0';
+
+    -- ALU output and Reg output
+
+    DWB_in1, DWB_in2: in std_logic_vector(31 downto 0):= (others=>'0');
+
+    -- address for writing back into mem
+
+WBA_in : in std_logic_vector(4 downto 0) := (others=>'0');
+
+    Write_Reg_W, Mem_Reg: out std_logic :='0';
+
+    DWB_out1, DWB_out2: out std_logic_vector(31 downto 0):= (others=>'0');
+
+    Output_WB  : out std_logic_vector(4 downto 0) := (others=>'0')
+
+  );
+
+end M_WB_Buffer;
+
+
+
+architecture Behavioral of M_WB_Buffer is
+
+begin
+
+process(clk)
+
+begin
+
+if(falling_edge(clk)) then
+
+      Write_Reg_W <=  Mem_Reg_W;
+
+      Mem_Reg <=  Mem_Reg_M;
+
+      --data read from Write back stage
+
+      DWB_out1     <=  DWB_in1;
+
+      -- output from ALU in write back stage
+
+      DWB_out2     <=  DWB_in2;
+
+      -- write backa ddress
+
+      Output_WB     <=  WBA_in;
+
+end if;
+
+end process;   
+
+end Behavioral;
+
